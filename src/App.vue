@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <city-selector :cityIds="cityIds" @city-change="cityChange"></city-selector>
+    <city-selector :city-ids="cityIds" @city-change="cityChange" :is-include-city="isIncludeCity"></city-selector>
   </div>
 </template>
 
@@ -15,8 +15,14 @@ export default {
   },
   data () {
     return {
-      cityIds: ["11", "125", "315", "233", "257", "41", "14", "128", "100"]
+      cityIds: ["11", "125", "315"],
+      isIncludeCity: false,
     }
+  },
+  mounted() {
+    setTimeout(() => {
+      this.cityIds = ["11", "125", "315", "233", "257", "41", "14", "128", "100"]
+    }, 3000);
   },
   methods: {
     cityChange(newVal) {

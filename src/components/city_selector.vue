@@ -78,11 +78,25 @@ export default {
       return this.includeCity ? '添加支持城市' : '添加不支持城市';
     }
   },
+  watch: {
+    isIncludeCity() {
+      this.init();
+    },
+    cityIds() {
+      this.init();
+    }
+  },
   mounted() {
-    this.currentCludeCities = this.isIncludeCity ? this.includeCities : this.excludeCities;
-    this.initCitiesByCityIds(this.cityIds);
+    this.init();
   },
   methods: {
+    init () {
+      this.includeCities = [];
+      this.excludeCities = [];
+      this.currentCludeCities = this.isIncludeCity ? this.includeCities : this.excludeCities;
+      this.includeCity = this.isIncludeCity;
+      this.cityIds.length && this.initCitiesByCityIds(this.cityIds);
+    },
     // 支持与不支持城市列表类型发生改变
     cludeTypeChange(includeCity) {
       this.currentCludeCities = includeCity ? this.includeCities : this.excludeCities;
@@ -97,11 +111,9 @@ export default {
       var curIndex = selectedProvinceIds.indexOf(provId);
 
       curIndex > -1 && selectedProvinceIds.splice(curIndex, 1);
-      var a = this.provinceMap.filter(province => {
+      return this.provinceMap.filter(province => {
         return selectedProvinceIds.indexOf(province.prov_id) === -1;
       });
-
-      return a
     },
 
     // 根据省份的id查询到这个省包含的所有市的列表数据
