@@ -9,7 +9,7 @@ module.exports = {
     path: path.resolve(__dirname, './dist'),
     publicPath: '/dist/',
     filename: 'cpCitySelector.js',
-    library: 'CpCitySelector',
+    library: 'cp-city-selector',
     libraryTarget: 'umd',
     umdNamedDefine: true
   },

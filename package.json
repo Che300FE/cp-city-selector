@@ -1,10 +1,9 @@
 {
   "name": "cp_city_selector",
   "description": "cp后台城市选择器",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "author": "carver <1084024036@qq.com>",
   "license": "MIT",
-  "private": true,
   "scripts": {
     "dev": "cross-env NODE_ENV=development webpack-dev-server --open --hot",
     "build": "cross-env NODE_ENV=production webpack --progress --hide-modules"
