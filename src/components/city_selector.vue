@@ -2,16 +2,16 @@
   <div class="cp-city-selector__wrapper">
     <div class="city-support-radio">
       <el-radio-group v-model="includeCity" @change="cludeTypeChange">
-        <el-radio :label="true">添加支持城市</el-radio>
-        <el-radio :label="false">添加不支持城市</el-radio>
+        <el-radio :label="true" :disabled="includeRadioDisabled">添加支持城市</el-radio>
+        <el-radio :label="false" :disabled="excludeRadioDisabled">添加不支持城市</el-radio>
       </el-radio-group>
     </div>
     <ul class="city-list">
       <li class="city-item" v-for="(cityItem, $index) in currentCludeCities" :key="$index">
         <el-select 
           v-model="cityItem.provinceId" 
-          placeholder="请选择省份" 
-          size="mini" 
+          placeholder="请选择省份"
+          size="mini"
           @change="selectProvince($event, cityItem)"
           @visible-change="provinceVisibleChange($event, cityItem)">
           <el-option
@@ -22,13 +22,13 @@
           </el-option>
         </el-select>
         <el-select 
-          v-model="cityItem.selectedCityIds" 
+          v-model="cityItem.selectedCityIds"
           v-show="cityItem.cityList.length"
           class="city-select"
           size="mini"
-          multiple 
+          multiple
           placeholder="请选择城市"
-          @change="emitCityChange">
+          @change="citySelectChange($event, cityItem)">
           <el-option
             v-for="city in cityItem.cityList"
             :key="city.city_id"
@@ -76,6 +76,14 @@ export default {
   computed: {
     btnText() {
       return this.includeCity ? '添加支持城市' : '添加不支持城市';
+    },
+    // 城市支持类型切换是否可以切换到支持城市
+    includeRadioDisabled() {
+      return this.excludeCities.length !== 0;
+    },
+    // 是否可以切换到不支持城市
+    excludeRadioDisabled() {
+      return this.includeCities.length !== 0;
     }
   },
   watch: {
@@ -104,6 +112,7 @@ export default {
     },
 
     // 根据省份的id查询到当前可以进行选择的省份列表
+    // 去掉已经选择过的省份
     filterProvinceList(provId) {
       var selectedProvinceIds = this.currentCludeCities.map(curCludeCity => {
         return curCludeCity.provinceId;
@@ -118,6 +127,8 @@ export default {
 
     // 根据省份的id查询到这个省包含的所有市的列表数据
     filterCityListByProvId(provId) {
+      // 如果在内存缓存中已经存在了该省份id对应的城市列表数据
+      // 直接使用该城市列表
       if (this.provIdFindCityListMap[provId]) {
         return this.provIdFindCityListMap[provId];
       }
@@ -125,6 +136,14 @@ export default {
       var cityList = this.cityMap.filter(city => {
         return city.prov_id === provId;
       });
+
+      // 添加`全部`可选项
+      cityList.unshift({
+        city_id: "#",
+        city_name: "全部",
+        prov_id: provId,      
+      });
+
       this.provIdFindCityListMap[provId] = cityList;
       return cityList;
     },
@@ -148,6 +167,25 @@ export default {
       return this.currentCludeCities.find(currentCludeCity => {
         return currentCludeCity.provinceId === provId;
       })
+    },
+
+    // 判断一个省下面所有的市是否都被选中了
+    predicateAllCitiesSelected(cityItem) {
+      // 所有城市id列表
+      var cityIds = cityItem.cityList.map(city => {
+        return city.city_id;
+      });
+      var selectedIdsLength = cityItem.selectedCityIds.length;
+      // cityIds需要去掉全部的id `#`去判断
+      if (selectedIdsLength === (cityIds.length - 1)) {
+        for (var i = 0; i < selectedIdsLength; i++) {
+          if (cityIds.indexOf(cityItem.selectedCityIds[i]) === -1 ) {
+            return false;
+          }
+        }
+        return true;
+      }
+      return false;
     },
     
     // 根据所有城市的Id来初始化被选择城市列表数据
@@ -176,13 +214,29 @@ export default {
 
       this.currentCludeCities.forEach(curCludeCity => {
         this.$set(curCludeCity, 'provinceList', this.filterProvinceList(curCludeCity.provinceId));
+        // 如果是已经选择了全省所有市
+        if (this.predicateAllCitiesSelected(curCludeCity)) {
+          curCludeCity.selectedCityIds = ['#'];
+        }
       });
     },
 
     // 获取当前被选中的城市类型与列表数据
     getCurSelectedData() {
       var cityIds = this.currentCludeCities.reduce((total, cityItem) => {
-        return total.concat(cityItem.selectedCityIds);
+        // 当前遍历到的省份的城市选择了`全部选项`
+        if (cityItem.selectedCityIds.length === 1 && cityItem.selectedCityIds[0] === '#') {
+          // 实际上被选中的是该省份下面所有城市的id
+          var realSelectedCityIds = cityItem.cityList.filter(city => {
+            return city.city_id !== '#';
+          }).map(city => {
+            return city.city_id;
+          });
+          return total.concat(realSelectedCityIds);
+        }
+        else {
+          return total.concat(cityItem.selectedCityIds);
+        }
       }, []);
       
       return {
@@ -233,6 +287,22 @@ export default {
       cityItem.cityList = this.filterCityListByProvId(provinceId);
       this.emitCityChange();
     },
+
+    // 城市选择发生改变
+    citySelectChange(selectedIds, cityItem) {
+      // 选择项中包含了`全部`选项
+      if(selectedIds.indexOf('#') > -1) {
+        // 选中的城市只有全部
+        cityItem.selectedCityIds = ['#'];
+      }
+
+      // 如果此时选择了一个城市之后 选择了全部的城市 默认将选择的城市改为`全部`
+      if (this.predicateAllCitiesSelected(cityItem)) {
+        cityItem.selectedCityIds = ['#'];
+      }
+
+      this.emitCityChange();
+    }
   }
 }
 </script>
