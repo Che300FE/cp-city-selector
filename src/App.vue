@@ -1,6 +1,10 @@
 <template>
   <div id="app">
-    <city-selector :city-ids="cityIds" @city-change="cityChange" :is-include-city="isIncludeCity"></city-selector>
+    <city-selector
+        :city-ids="cityIds"
+        @city-change="cityChange"
+        :is-include-city="isIncludeCity"
+        :can-select-exclude="false"></city-selector>
   </div>
 </template>
 

@@ -2,8 +2,8 @@
   <div class="cp-city-selector__wrapper">
     <div class="city-support-radio">
       <el-radio-group v-model="includeCity" @change="cludeTypeChange">
-        <el-radio :label="true" :disabled="includeRadioDisabled">添加支持城市</el-radio>
-        <el-radio :label="false" :disabled="excludeRadioDisabled">添加不支持城市</el-radio>
+        <el-radio v-if="canSelectInclude" :label="true" :disabled="includeRadioDisabled">添加支持城市</el-radio>
+        <el-radio v-if="canSelectExclude" :label="false" :disabled="excludeRadioDisabled">添加不支持城市</el-radio>
       </el-radio-group>
     </div>
     <ul class="city-list">
@@ -57,6 +57,16 @@ export default {
     cityIds: {
       type: Array,
       default: () => []
+    },
+    // radio是否显示`添加支持城市`选项
+    canSelectInclude: {
+      type: Boolean,
+      default: true
+    },
+    // radio是否显示`添加不支持城市`选项
+    canSelectExclude: {
+      type: Boolean,
+      default: true
     }
   },
   data(){
